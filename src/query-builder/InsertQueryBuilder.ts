@@ -18,6 +18,8 @@ import { DriverUtils } from "../driver/DriverUtils"
 import { ObjectUtils } from "../util/ObjectUtils"
 import { InstanceChecker } from "../util/InstanceChecker"
 
+const escapeData  = (str: string) => str.replace(/[\']/g, '\'\'')
+
 /**
  * Allows to build complex sql queries in a fashion way and execute those queries.
  */
@@ -771,8 +773,9 @@ export class InsertQueryBuilder<Entity> extends QueryBuilder<Entity> {
                             value,
                         )
 
-                        // if value for this column was not provided then insert default value
-                    } else if (value === undefined) {
+                    }
+                    // if value for this column was not provided then insert default value
+                    else if (value === undefined) {
                         if (
                             (this.connection.driver.options.type === "oracle" &&
                                 valueSets.length > 1) ||
@@ -809,7 +812,23 @@ export class InsertQueryBuilder<Entity> extends QueryBuilder<Entity> {
                         expression += value()
 
                         // just any other regular value
-                    } else {
+                    }
+                    else if(this.connection.driver.options.insertWithoutVariables){
+                      typeof value === 'function' && (value = value())
+
+                      switch(typeof value){
+                        case 'string':
+                          expression += `'${escapeData(value)}'`
+                          break
+                        case 'undefined':
+                          expression += 'null'
+                          break
+                        default:
+                          expression += value
+
+                      }
+                    }
+                    else {
                         if (this.connection.driver.options.type === "mssql")
                             value = (
                                 this.connection.driver as SqlServerDriver

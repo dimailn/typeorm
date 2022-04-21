@@ -203,4 +203,6 @@ export interface BaseDataSourceOptions {
                */
               readonly ignoreErrors?: boolean
           }
+
+    insertWithoutVariables?: boolean
 }
